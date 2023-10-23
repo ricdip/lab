@@ -54,7 +54,7 @@ class Agent:
         )
         self.trained = False
 
-    def train(self, alpha=0.1, gamma=0.6, epsilon=0.1, episodes=100000) -> None:
+    def train(self, alpha=0.3, gamma=0.9, epsilon=0.3, episodes=5000) -> None:
         """
         The function that executes the training of the agent
 
@@ -69,6 +69,7 @@ class Agent:
             return
 
         state = self.env
+        rows, cols = state.shape
 
         # for each episode, the agent goes from initial state to final state, and we update the Q-table
         for i in range(1, episodes + 1):
@@ -79,7 +80,7 @@ class Agent:
             while not state.done:
                 # the grid contains all state, we get the current state_index from the agent position
                 agent_x, agent_y = state.agent_pos
-                state_index = agent_x * 10 + agent_y
+                state_index = agent_x * rows + agent_y
 
                 # random.uniform(0, 1) returns a random float number in the interval [0, 1]
                 if random.uniform(0, 1) < epsilon:
@@ -96,7 +97,7 @@ class Agent:
                 next_state, reward = state.move_agent(action)
                 # we get the new state_index from agent position
                 next_agent_x, next_agent_y = next_state.agent_pos
-                next_state_index = next_agent_x * 10 + next_agent_y
+                next_state_index = next_agent_x * rows + next_agent_y
 
                 # we get the old Q(state, action) for old state from Q-table
                 old_value = self.q_table[state_index, action_index]
@@ -121,11 +122,12 @@ class Agent:
 
         self.trained = True
 
-    def execute(self) -> None:
+    def exec(self) -> None:
         """
         The function that executes the agent exploration of the environment. The explored states are printed to stdout
         """
         state = self.env
+        rows, cols = state.shape
         # we reset the state and print it
         state.reset()
         self.print_state(state)
@@ -134,7 +136,7 @@ class Agent:
         while not state.done:
             # the grid contains all state, we get the current state_index from the agent position
             agent_x, agent_y = state.agent_pos
-            state_index = agent_x * 10 + agent_y
+            state_index = agent_x * rows + agent_y
 
             # we exploit the Q-table to choose the best action to take in the current state
             action_index = np.argmax(self.q_table[state_index])

@@ -9,12 +9,16 @@ class Environment:
     Environment implementation of an arena that contains an Agent and an Exit and is filled with obstacles. The objective of the Agent is to reach the Exit
     """
 
-    def __init__(self):
+    def __init__(self, shape=(10, 10)):
         """
-        Environment constructor. Loads default arena
+        Environment constructor
+
+        Args:
+            shape (tuple): the (x: int, y: int) shape of the arena
 
         Attributes:
             arena (Environment): the environment that the Agent will explore
+            shape (tuple): the (x: int, y: int) shape of the arena
             agent_pos (tuple): the (x, y) position of the Agent in the arena
             exit_pos (tuple): the (x, y) position of the Exit in the arena
             step (int): the total steps of the Agent in the arena
@@ -25,18 +29,25 @@ class Environment:
             state_space (int): number of all possible states
             action_space (int): number of all possible actions
         """
-        self.load_default()
+        self.shape = shape
+        self.__generated_arena = None
 
-    def __init(self) -> None:
+    def init(self) -> None:
         """
-        Init function that initialized the environment
+        Init function that initializes the environment
         """
+        # raise an exception if the arena is not set
+        if self.__generated_arena is None:
+            raise RuntimeError("Load or generate an arena first")
+
+        # the shape of the arena
+        rows, cols = self.shape
         # the possible states are all possible agent positions in the arena grid
         self.arena = self.__generated_arena
         # agent starting position is always the same
-        self.agent_pos = (9, 0)
+        self.agent_pos = (rows - 1, 0)
         # exit position is always the same
-        self.exit_pos = (0, 9)
+        self.exit_pos = (0, cols - 1)
         # total steps of the agent
         self.step = 0
         # set to True if a collision occurred: there is a collision if the agent choose to move to a tile where there is an obstacle or if the agent choose to move out of the arena bounds
@@ -51,7 +62,7 @@ class Environment:
 
         # RL variables
         # state space = all possible states = row x col
-        self.state_space = 10 * 10
+        self.state_space = rows * cols
         # action space = all possible actions = up, down, left, right = 4
         self.action_space = 4
 
@@ -62,56 +73,43 @@ class Environment:
         Args:
             obstacle_prob (float): the probability [0, 1] of the generation of an obstacle
         """
-        self.__generated_arena = [
+        self.__generated_arena = []
+        rows, cols = self.shape
+
+        # first row
+        self.__generated_arena.append(
             [
                 random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 9)
+                for i in range(0, cols - 1)
             ]
             + [2],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
-            [
-                random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 10)
-            ],
+        )
+
+        # middle rows
+        for _ in range(1, rows - 1):
+            self.__generated_arena.append(
+                [
+                    random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
+                    for i in range(0, cols)
+                ],
+            )
+
+        # last row
+        self.__generated_arena.append(
             [1]
             + [
                 random.choices([0, 3], [1 - obstacle_prob, obstacle_prob])[0]
-                for i in range(0, 9)
+                for i in range(0, cols - 1)
             ],
-        ]
+        )
+
         self.reset()
 
     def load_default(self) -> None:
         """
-        Function that load the default arena
+        Function that load the default arena (10 x 10)
         """
+        self.shape = (10, 10)
         self.__generated_arena = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
             [0, 0, 3, 3, 0, 3, 0, 0, 3, 3],
@@ -130,7 +128,7 @@ class Environment:
         """
         Function that resets the environment
         """
-        self.__init()
+        self.init()
 
     def set_agent(self, x: int, y: int) -> None:
         """
@@ -140,6 +138,8 @@ class Environment:
             x (int): the x coordinate of the new position in the arena
             y (int): the y coordinate of the new position in the arena
         """
+        self.step += 1
+
         if self.__is_collision(x, y):
             self.collision = True
             return
@@ -155,8 +155,6 @@ class Environment:
 
         if self.agent_pos == self.exit_pos:
             self.done = True
-
-        self.step += 1
 
     # execute(current_state, action) = next_state, reward
     def move_agent(self, move: Move) -> tuple:
@@ -191,9 +189,9 @@ class Environment:
         Function that computes the reward of the current state
 
         Rewards setting:
-            -100: wall collision
-            -1: step
-            +10000: agent arrives at exit
+            -100: if a wall collision occurred
+            -1: for each step
+            +10000: if the Agent reached the exit
         """
         reward = -self.step
 
@@ -216,7 +214,10 @@ class Environment:
         Returns:
             bool: True if (x, y) is occupied by an obstacle or is an out of bounds position of the arena
         """
-        return x < 0 or x > 9 or y < 0 or y > 9 or self.arena[x][y] == 3
+        rows, cols = self.shape
+        return (
+            x < 0 or x > (rows - 1) or y < 0 or y > (cols - 1) or self.arena[x][y] == 3
+        )
 
     def __get_colored_tile(self, x: int, y: int) -> str:
         """
@@ -238,10 +239,11 @@ class Environment:
             return f"{Back.WHITE}  "
 
     def __str__(self) -> str:
+        rows, cols = self.shape
         arena = ""
-        for i in range(0, 10):
-            for j in range(0, 10):
-                if j == 9:
+        for i in range(0, rows):
+            for j in range(0, cols):
+                if j == (cols - 1):
                     arena += self.__get_colored_tile(i, j) + f"{Style.RESET_ALL}" + "\n"
                 else:
                     arena += self.__get_colored_tile(i, j) + f"{Style.RESET_ALL}"
