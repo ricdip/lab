@@ -1,5 +1,5 @@
-from repr import Repr
+from state import State
 
-r = Repr(8)
+s = State(8)
 
-print(r)
+print(s)
