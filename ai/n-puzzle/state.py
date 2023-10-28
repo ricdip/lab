@@ -65,3 +65,12 @@ class State:
         out += "-----"
 
         return out
+
+    def __eq__(self, o):
+        if isinstance(o, State):
+            return self.repr == o.repr
+        else:
+            return False
+
+    def __ne__(self, o):
+        return not self.__eq__(o)

@@ -108,3 +108,12 @@ class Repr:
                 else:
                     out += tile + " "
         return out
+
+    def __eq__(self, o):
+        if isinstance(o, Repr):
+            return np.array_equal(self.grid, o.grid)
+        else:
+            return False
+
+    def __ne__(self, o):
+        return not self.__eq__(o)
