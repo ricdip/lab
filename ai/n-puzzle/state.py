@@ -6,14 +6,23 @@ from typing import Self
 class State:
     def __init__(self, n_tiles: int):
         self.repr = Repr(n_tiles)
+        self.parent = None
         self.g = 0
         self.h = 0
         self.f = 0
         self.step = 0
 
+    def is_game_over(self) -> bool:
+        return self.repr.is_game_over()
+
     def neighbors(self) -> set:
         states = [self.move_up(), self.move_down(), self.move_left(), self.move_right()]
-        return set(filter(lambda item: item is not None, states))
+        states = set(filter(lambda item: item is not None, states))
+
+        for s in states:
+            s.parent = self
+
+        return states
 
     def move_up(self) -> Self | None:
         state = deepcopy(self)
@@ -74,3 +83,6 @@ class State:
 
     def __ne__(self, o):
         return not self.__eq__(o)
+
+    def __hash__(self):
+        return hash(self.repr)
