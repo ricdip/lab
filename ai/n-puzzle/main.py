@@ -1,16 +1,28 @@
 from state import State
 from heuristics import MisplacedTiles
 from algorithms import AStar
+from args import Args
 
-s = State(8)
-h = MisplacedTiles(template=s)
-a = AStar(heuristic=h, status=True)
 
-print(s.repr)
+def run(n_tiles: int) -> None:
+    initial_state = State(n_tiles=n_tiles)
+    heuristic = MisplacedTiles(template=initial_state)
+    algorithm = AStar(heuristic=heuristic, status=True)
 
-path = a.exec(s)
+    print(initial_state.repr)
 
-print("\nSolution:\n")
+    path = algorithm.exec(initial_state)
 
-for state in path:
-    print(state, end="\n\n")
+    print("\nSolution:\n")
+
+    for state in path:
+        print(state, end="\n\n")
+
+
+def main() -> None:
+    cli_args = Args().parse_args()
+    run(cli_args.n_tiles)
+
+
+if __name__ == "__main__":
+    main()
