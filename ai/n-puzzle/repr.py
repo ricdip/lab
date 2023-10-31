@@ -7,6 +7,7 @@ class Repr:
         self.n_tiles = n_tiles
         self.__compute_shape()
         self.__generate_instance()
+        self.__generate_goal_instance()
 
     def move_up(self) -> None:
         x, y = self.__get_x_pos()
@@ -41,12 +42,10 @@ class Repr:
         self.grid[x, y] = tmp
 
     def is_game_over(self) -> bool:
-        line = self.__compute_line_grid(self.grid)
-        expect = 1
-        for i in range(0, self.n_tiles):
-            if line[i] != expect:
-                return False
-            expect += 1
+        for i in range(0, self.n):
+            for j in range(0, self.n):
+                if self.grid[i, j] != self.goal[i, j]:
+                    return False
         return True
 
     def __compute_shape(self) -> None:
@@ -97,6 +96,11 @@ class Repr:
 
     def __get_x_pos(self) -> tuple:
         return tuple(np.argwhere(self.grid == 0)[0])
+
+    def __generate_goal_instance(self) -> None:
+        self.goal = np.arange(1, self.n_tiles + 1)
+        self.goal = np.append(self.goal, 0)
+        self.goal = np.reshape(self.goal, newshape=self.shape)
 
     def __str__(self):
         out = ""

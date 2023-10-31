@@ -8,10 +8,13 @@ class Heuristic:
 
 
 class MisplacedTiles(Heuristic):
-    def __init__(self, initial_state: State):
-        self.n_tiles = initial_state.repr.n_tiles
-        self.shape = initial_state.repr.shape
-        self.n = initial_state.repr.n
+    def __init__(self, template: State):
+        self.n_tiles = template.repr.n_tiles
+        self.shape = template.repr.shape
+        self.n = template.repr.n
+        self.__generate_goal_instance()
+
+    def __generate_goal_instance(self) -> None:
         self.goal = np.arange(1, self.n_tiles + 1)
         self.goal = np.append(self.goal, 0)
         self.goal = np.reshape(self.goal, newshape=self.shape)
